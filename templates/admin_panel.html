@@ -1,0 +1,440 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel - Vibhavari Kotekar{% endblock %}
+
+{% block content %}
+<!-- Admin Navigation -->
+<nav class="navbar admin-navbar">
+    <div class="container">
+        <div class="nav-brand">Admin Panel</div>
+        <div class="nav-menu">
+            <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> View Portfolio</a>
+            <a href="{{ url_for('admin_logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="admin-page">
+    <div class="container">
+        <!-- Admin Dashboard Header -->
+        <div class="admin-header">
+            <h1><i class="fas fa-dashboard"></i> Dashboard</h1>
+            <p>Manage your portfolio content</p>
+        </div>
+
+        <!-- Profile Photo Upload -->
+        <section class="admin-section">
+            <div class="section-header">
+                <h2><i class="fas fa-user-circle"></i> Profile Photo</h2>
+            </div>
+            
+            <div class="admin-form">
+                <div class="profile-upload-simple">
+                    <!-- Current Photo Preview -->
+                    <div class="current-photo-display">
+                        <h3>Current Profile Photo</h3>
+                        <div class="circular-preview">
+                            <img src="{{ url_for('static', filename='images/profile.png') }}?v={{ range(1, 1000) | random }}" 
+                                 alt="Current Profile Photo" 
+                                 onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/profile.jpg') }}?v={{ range(1, 1000) | random }}'; this.onerror=function(){ this.src='{{ url_for('static', filename='images/placeholder.svg') }}'; }">
+                        </div>
+                        <p class="photo-hint">This is how it appears on your homepage</p>
+                    </div>
+
+                    <!-- Simple Upload Form -->
+                    <div class="upload-form-simple">
+                        <h3>Upload New Photo</h3>
+                        
+                        <form method="POST" action="{{ url_for('upload_profile_photo') }}" enctype="multipart/form-data">
+                            <!-- Hidden fields to store zoom and position -->
+                            <input type="hidden" name="zoom" id="zoomInput" value="100">
+                            <input type="hidden" name="position" id="positionInput" value="0">
+                            
+                            <div class="form-group">
+                                <label><i class="fas fa-image"></i> Choose Photo File</label>
+                                <input type="file" name="file" id="photoFileInput" class="form-input" 
+                                       accept="image/png,image/jpeg,image/jpg,image/gif" required
+                                       onchange="document.getElementById('photoPreview').src = window.URL.createObjectURL(this.files[0]); document.getElementById('photoPreviewArea').style.display = 'block';">
+                                <small class="hint-text" style="display: block; margin-top: 0.5rem;">
+                                    <i class="fas fa-info-circle"></i> Recommended: Square image (600x600px or larger), PNG format preferred
+                                </small>
+                            </div>
+
+                            <!-- Photo Preview Area (Shows after selecting) -->
+                            <div id="photoPreviewArea" style="display: none; margin: 1.5rem 0; padding: 1.5rem; background: var(--pastel-beige); border-radius: 12px;">
+                                <div style="background: #d4edda; padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; text-align: center; border: 1px solid #28a745;">
+                                    <small style="color: #155724;">
+                                        <i class="fas fa-check-circle"></i> <strong>Perfect!</strong> Adjust sliders to position your photo. Your adjustments WILL be saved to the homepage!
+                                    </small>
+                                </div>
+                                <h4 style="margin: 0 0 1rem 0; color: var(--text-primary); text-align: center;">
+                                    <i class="fas fa-eye"></i> Preview (How It Looks on Homepage)
+                                </h4>
+                                
+                                <div class="circular-preview" style="margin: 0 auto; position: relative; overflow: hidden;">
+                                    <img id="photoPreview" src="" alt="Preview" 
+                                         style="position: absolute; top: 50%; left: 50%; 
+                                                width: 100%; height: 100%; 
+                                                object-fit: contain; 
+                                                transform: translate(-50%, -50%) scale(1); 
+                                                transform-origin: center center;">
+                                </div>
+
+                                <!-- Position Controls -->
+                                <div style="margin: 1.5rem 0; padding: 1rem; background: white; border-radius: 8px;">
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                                        <i class="fas fa-arrows-alt-v"></i> Preview: Move Image Up/Down
+                                    </label>
+                                    <div style="display: flex; align-items: center; gap: 1rem;">
+                                        <span style="font-size: 0.875rem; color: var(--text-secondary);">⬆️ Up</span>
+                                        <input type="range" id="positionSlider" min="-50" max="50" value="0" step="5" 
+                                               style="flex: 1;"
+                                               oninput="updatePhotoTransform()">
+                                        <span style="font-size: 0.875rem; color: var(--text-secondary);">Down ⬇️</span>
+                                    </div>
+                                    <p class="hint-text" style="margin-top: 0.5rem; text-align: center;">
+                                        <i class="fas fa-eye"></i> Preview different parts of your photo
+                                    </p>
+                                </div>
+
+                                <!-- Zoom Control -->
+                                <div style="margin: 1.5rem 0; padding: 1rem; background: white; border-radius: 8px;">
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                                        <i class="fas fa-search-plus"></i> Preview: Zoom In/Out
+                                    </label>
+                                    <div style="display: flex; align-items: center; gap: 1rem;">
+                                        <span style="font-size: 0.875rem; color: var(--text-secondary);">Smaller</span>
+                                        <input type="range" id="zoomSlider" min="80" max="200" value="100" step="5" 
+                                               style="flex: 1;"
+                                               oninput="updatePhotoTransform(); document.getElementById('zoomValue').textContent = this.value + '%';">
+                                        <span style="font-size: 0.875rem; color: var(--text-secondary);">Bigger</span>
+                                        <strong id="zoomValue" style="min-width: 50px; text-align: center;">100%</strong>
+                                    </div>
+                                    <p class="hint-text" style="margin-top: 0.5rem; text-align: center;">
+                                        <i class="fas fa-eye"></i> Check how different zoom levels look
+                                    </p>
+                                </div>
+
+                                <p class="hint-text" style="margin: 1rem 0 0 0; text-align: center; color: #2c5aa0;">
+                                    <i class="fas fa-save"></i> <strong>Your adjustments will be saved!</strong> What you see above is what will appear on your homepage.
+                                </p>
+                            </div>
+
+                            <script>
+                            function updatePhotoTransform() {
+                                var zoom = document.getElementById('zoomSlider').value;
+                                var position = document.getElementById('positionSlider').value;
+                                var img = document.getElementById('photoPreview');
+                                
+                                // Save to hidden inputs
+                                document.getElementById('zoomInput').value = zoom;
+                                document.getElementById('positionInput').value = position;
+                                
+                                // Update preview
+                                var zoomScale = zoom / 100;
+                                var yPos = -50 + parseInt(position);
+                                img.style.transform = 'translate(-50%, ' + yPos + '%) scale(' + zoomScale + ')';
+                            }
+                            </script>
+
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                <i class="fas fa-save"></i> Upload & Save to Homepage
+                </button>
+                            <p class="hint-text" style="margin-top: 1rem; color: #2c5aa0; text-align: center;">
+                                <i class="fas fa-globe"></i> <strong>Note:</strong> Once uploaded, everyone will see this photo!
+                            </p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Add Certificate -->
+        <section class="admin-section">
+            <div class="section-header">
+                <h2><i class="fas fa-certificate"></i> Add Certificate</h2>
+            </div>
+            
+            <form method="POST" action="{{ url_for('add_certificate') }}" enctype="multipart/form-data" class="admin-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Certificate Title *</label>
+                        <input type="text" name="title" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" class="form-input" rows="2"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Project Link</label>
+                        <input type="url" name="project_link" class="form-input" placeholder="https://...">
+                    </div>
+                    <div class="form-group">
+                        <label>Upload File (Image or PDF) *</label>
+                        <input type="file" name="file" class="form-input" accept=".png,.jpg,.jpeg,.pdf,.gif" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Certificate</button>
+            </form>
+
+            <!-- Existing Certificates -->
+            {% if certificates %}
+            <h3 style="margin-top: 2rem;">Existing Certificates</h3>
+            <div class="admin-grid">
+                    {% for cert in certificates %}
+                <div class="admin-card">
+                        <div class="card-preview">
+                            {% if cert.file_type == 'pdf' %}
+                            <div class="pdf-icon-small"><i class="fas fa-file-pdf"></i></div>
+                            {% else %}
+                                <img src="{{ url_for('uploaded_file', filename=cert.file_path) }}" alt="{{ cert.title }}">
+                            {% endif %}
+                        </div>
+                        <div class="card-content">
+                            <h4>{{ cert.title }}</h4>
+                            <p>{{ cert.description }}</p>
+                        {% if cert.project_link %}<small><i class="fas fa-link"></i> {{ cert.project_link }}</small>{% endif %}
+                        </div>
+                        <div class="card-actions">
+                        <form method="POST" action="{{ url_for('delete_certificate', cert_id=cert.id) }}" style="display: inline;">
+                            <button type="submit" class="btn-icon btn-danger" onclick="return confirm('Delete this certificate?');">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                    </div>
+                    {% endfor %}
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Add Project -->
+        <section class="admin-section">
+            <div class="section-header">
+                <h2><i class="fas fa-code"></i> Add Project</h2>
+            </div>
+            
+            <form method="POST" action="{{ url_for('add_project') }}" class="admin-form">
+                <div class="form-group">
+                    <label>Project Title *</label>
+                    <input type="text" name="title" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Description *</label>
+                    <textarea name="description" class="form-input" rows="3" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Technologies (comma-separated) *</label>
+                        <input type="text" name="technologies" class="form-input" placeholder="Python, Flask, React" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Project Link</label>
+                        <input type="url" name="project_link" class="form-input" placeholder="https://...">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Project</button>
+            </form>
+
+            <!-- Existing Projects -->
+            {% if projects %}
+            <h3 style="margin-top: 2rem;">Existing Projects</h3>
+            <div class="admin-grid">
+                    {% for project in projects %}
+                <div class="admin-card">
+                        <div class="card-content">
+                            <h4>{{ project.title }}</h4>
+                            <p>{{ project.description }}</p>
+                            <div class="tech-tags-small">
+                                {% for tech in project.technologies.split(',') %}
+                                <span>{{ tech.strip() }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                        <form method="POST" action="{{ url_for('delete_project', project_id=project.id) }}" style="display: inline;">
+                            <button type="submit" class="btn-icon btn-danger" onclick="return confirm('Delete this project?');">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                    </div>
+                    {% endfor %}
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Add Blog -->
+        <section class="admin-section">
+            <div class="section-header">
+                <h2><i class="fab fa-medium"></i> Add Blog Post</h2>
+            </div>
+            
+            <form method="POST" action="{{ url_for('add_blog') }}" class="admin-form">
+                <div class="form-group">
+                    <label>Blog Title *</label>
+                    <input type="text" name="title" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" class="form-input" rows="2" placeholder="Brief description of your blog post"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Medium Blog Link *</label>
+                    <input type="url" name="blog_link" class="form-input" placeholder="https://medium.com/@yourname/..." required>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Blog</button>
+            </form>
+
+            <!-- Existing Blogs -->
+            {% if blogs %}
+            <h3 style="margin-top: 2rem;">Existing Blog Posts</h3>
+            <div class="admin-grid">
+                    {% for blog in blogs %}
+                <div class="admin-card">
+                        <div class="card-content">
+                            <h4><i class="fab fa-medium"></i> {{ blog.title }}</h4>
+                            {% if blog.description %}
+                            <p>{{ blog.description }}</p>
+                            {% endif %}
+                            <small><i class="fas fa-link"></i> <a href="{{ blog.blog_link }}" target="_blank">{{ blog.blog_link }}</a></small>
+                        </div>
+                        <div class="card-actions">
+                        <form method="POST" action="{{ url_for('delete_blog', blog_id=blog.id) }}" style="display: inline;">
+                            <button type="submit" class="btn-icon btn-danger" onclick="return confirm('Delete this blog post?');">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                    </div>
+                    {% endfor %}
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Add Skill -->
+        <section class="admin-section">
+            <div class="section-header">
+                <h2><i class="fas fa-tools"></i> Add Skill</h2>
+            </div>
+            
+            <form method="POST" action="{{ url_for('add_skill') }}" class="admin-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Skill Name *</label>
+                        <input type="text" name="name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category *</label>
+                        <select name="category" class="form-input" required>
+                            <option value="work_with">Skills I Work With</option>
+                            <option value="know">Technologies I Know</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Skill</button>
+            </form>
+
+            <!-- Existing Skills -->
+            <div class="skills-admin-container">
+                <div class="skills-admin-group">
+                    <h3>Skills I Work With</h3>
+                    <div class="skill-badges">
+                            {% for skill in skills_work %}
+                        <div class="skill-badge-admin">
+                                {{ skill.name }}
+                            <form method="POST" action="{{ url_for('delete_skill', skill_id=skill.id) }}" style="display: inline;">
+                                <button type="submit" class="badge-delete" onclick="return confirm('Delete {{ skill.name }}?');">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </form>
+                            </div>
+                            {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="skills-admin-group">
+                    <h3>Technologies I Know</h3>
+                    <div class="skill-badges">
+                            {% for skill in skills_know %}
+                        <div class="skill-badge-admin">
+                                {{ skill.name }}
+                            <form method="POST" action="{{ url_for('delete_skill', skill_id=skill.id) }}" style="display: inline;">
+                                <button type="submit" class="badge-delete" onclick="return confirm('Delete {{ skill.name }}?');">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </form>
+                            </div>
+                            {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Add Quality -->
+        <section class="admin-section">
+            <div class="section-header">
+                <h2><i class="fas fa-star"></i> Add Professional Quality</h2>
+            </div>
+            
+            <form method="POST" action="{{ url_for('add_quality') }}" class="admin-form">
+                <div class="form-group">
+                    <label>Quality Description *</label>
+                    <textarea name="content" class="form-input" rows="2" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Quality</button>
+            </form>
+
+            <!-- Existing Qualities -->
+            {% if qualities %}
+            <div class="qualities-admin-list">
+                    {% for quality in qualities %}
+                <div class="quality-admin-card">
+                        <p>{{ quality.content }}</p>
+                        <div class="card-actions">
+                        <form method="POST" action="{{ url_for('delete_quality', quality_id=quality.id) }}" style="display: inline;">
+                            <button type="submit" class="btn-icon btn-danger" onclick="return confirm('Delete this quality?');">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Contact Information -->
+        <section class="admin-section">
+            <div class="section-header">
+                <h2><i class="fas fa-address-book"></i> Contact Information</h2>
+            </div>
+            
+            <form method="POST" action="{{ url_for('update_contact') }}" class="admin-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-envelope"></i> Email</label>
+                        <input type="email" name="email" value="{{ contact.email if contact else '' }}" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fab fa-linkedin"></i> LinkedIn URL</label>
+                        <input type="url" name="linkedin" value="{{ contact.linkedin if contact else '' }}" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fab fa-github"></i> GitHub URL</label>
+                        <input type="url" name="github" value="{{ contact.github if contact else '' }}" class="form-input" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Update Contact Info
+                </button>
+            </form>
+        </section>
+    </div>
+</div>
+
+{% endblock %}

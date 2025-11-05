@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Navigation Bar -->
+<nav class="navbar">
+    <div class="container">
+        <div class="nav-brand">VK</div>
+        <ul class="nav-menu">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#certificates">Certificates</a></li>
+            <li><a href="#projects">Projects</a></li>
+            <li><a href="#skills">Skills</a></li>
+            <li><a href="#qualities">Qualities</a></li>
+            <li><a href="#blogs">Blogs</a></li>
+            <li><a href="#contact">Contact</a></li>
+            <li><a href="#youtube">Entertainment</a></li>
+            <li><a href="{{ url_for('admin_login') }}" class="admin-link"><i class="fas fa-lock"></i> Admin</a></li>
+        </ul>
+    </div>
+</nav>
+
+<!-- Home Section -->
+<section id="home" class="hero-section">
+    <div class="container">
+        <div class="hero-wrapper">
+            <div class="hero-image">
+                <div class="profile-photo">
+                    <img src="{{ url_for('static', filename='images/profile.png') }}?v={{ range(1, 1000) | random }}" 
+                         alt="Vibhavari Kotekar" 
+                         onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/profile.jpg') }}?v={{ range(1, 1000) | random }}'; this.onerror=function(){ this.src='{{ url_for('static', filename='images/placeholder.svg') }}'; }">
+                </div>
+            </div>
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    <span id="typewriter"></span>
+                    <span class="cursor">|</span>
+                </h1>
+                <h2 class="hero-subtitle">Senior Software Engineer</h2>
+                <p class="hero-description">
+                    I am a software engineer from India, and I create stuff sometimes...!<br>
+                    I enjoy building things that make life a little easier, whether it's a solid backend system, 
+                    a clean user interface, or just experimenting with new ideas for fun. I love solving problems, learning new technologies, 
+                    and working with great people to bring cool ideas to life. At the end of the day, 
+                    I just enjoy creating things that work well and make a difference.<br><br>
+                    Growth hits different when you have got persistence and passion,
+                    after all, <br>
+                    <em style="font-style: italic; color: #707070;">“ A Winner is just a Loser who tried One More Time !! ”</em><br>
+                    still pushing, still believing... Always leveling up !
+                </p>
+                <div class="hero-cta">
+                    <a href="#contact" class="btn btn-primary"><i class="fas fa-handshake"></i> Get In Touch</a>
+                    <a href="#projects" class="btn btn-secondary"><i class="fas fa-laptop-code laptop-icon"></i> My Tech Projects</a>
+                    <a href="#youtube" class="btn btn-youtube-hero"><i class="fab fa-youtube"></i> Watch My Content</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Certificates & Awards Section -->
+<section id="certificates" class="section">
+    <div class="container">
+        <h2 class="section-title">Certificates & Awards</h2>
+        <div class="certificates-grid">
+            {% if certificates %}
+                {% for cert in certificates %}
+                <div class="certificate-card">
+                    <div class="certificate-preview">
+                        {% if cert.file_type == 'pdf' %}
+                                <iframe src="{{ url_for('uploaded_file', filename=cert.file_path) }}" 
+                                    class="pdf-preview"
+                                    title="{{ cert.title }}">
+                            </iframe>
+                            <div class="pdf-overlay">
+                                <a href="{{ url_for('uploaded_file', filename=cert.file_path) }}" target="_blank" class="pdf-overlay-link">
+                                    <i class="fas fa-expand"></i> View Full PDF
+                                </a>
+                            </div>
+                        {% else %}
+                            <img src="{{ url_for('uploaded_file', filename=cert.file_path) }}" alt="{{ cert.title }}">
+                        {% endif %}
+                    </div>
+                    <div class="certificate-info">
+                        <h3>{{ cert.title }}</h3>
+                        <p>{{ cert.description }}</p>
+                        {% if cert.project_link %}
+                        <a href="{{ cert.project_link }}" class="cert-link" target="_blank">
+                            <i class="fas fa-link"></i> Related Project
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('uploaded_file', filename=cert.file_path) }}" class="cert-link" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> View Full Certificate
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-certificate"></i>
+                    <p>No certificates uploaded yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Projects Section -->
+<section id="projects" class="section section-alt">
+    <div class="container">
+        <h2 class="section-title">Projects</h2>
+        <div class="projects-grid">
+            {% if projects %}
+                {% for project in projects %}
+                <div class="project-card">
+                    <h3>{{ project.title }}</h3>
+                    <p class="project-description">{{ project.description }}</p>
+                    <div class="project-technologies">
+                        {% for tech in project.technologies.split(',') %}
+                        <span class="tech-tag">{{ tech.strip() }}</span>
+                        {% endfor %}
+                    </div>
+                    {% if project.project_link %}
+                    <a href="{{ project.project_link }}" class="project-link" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> View Project
+                    </a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-code"></i>
+                    <p>No projects added yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Skills & Knowledge Section -->
+<section id="skills" class="section">
+    <div class="container">
+        <h2 class="section-title">Skills & Knowledge</h2>
+        <div class="skills-container">
+            <div class="skills-group">
+                <h3><i class="fas fa-tools"></i> Skills I Work With</h3>
+                <div class="skills-list">
+                    {% if skills_work %}
+                        {% for skill in skills_work %}
+                        <span class="skill-badge skill-primary">{{ skill.name }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <p class="empty-text">No skills added yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="skills-group">
+                <h3><i class="fas fa-lightbulb"></i> Technologies I Know</h3>
+                <div class="skills-list">
+                    {% if skills_know %}
+                        {% for skill in skills_know %}
+                        <span class="skill-badge skill-secondary">{{ skill.name }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <p class="empty-text">No technologies added yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Qualities Section -->
+<section id="qualities" class="section section-alt">
+    <div class="container">
+        <h2 class="section-title">Professional Qualities</h2>
+        <div class="qualities-container">
+            {% if qualities %}
+                {% for quality in qualities %}
+                <div class="quality-card">
+                    <i class="fas fa-star"></i>
+                    <p>{{ quality.content }}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-star"></i>
+                    <p>No qualities added yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Blogs Section -->
+<section id="blogs" class="section">
+    <div class="container">
+        <h2 class="section-title">Blog Spot ! What's on My Mind ?</h2>
+        <div class="blogs-grid">
+            {% if blogs %}
+                {% for blog in blogs %}
+                <div class="blog-card">
+                    <div class="blog-icon">
+                        <i class="fab fa-medium"></i>
+                    </div>
+                    <h3>{{ blog.title }}</h3>
+                    {% if blog.description %}
+                    <p class="blog-description">{{ blog.description }}</p>
+                    {% endif %}
+                    <a href="{{ blog.blog_link }}" class="blog-link" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-external-link-alt"></i> Read on Medium
+                    </a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fab fa-medium"></i>
+                    <p>No blog posts added yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Contact Section -->
+<section id="contact" class="section">
+    <div class="container">
+        <h2 class="section-title">Get In Touch</h2>
+        <div class="contact-container">
+            <p class="contact-intro">Feel free to reach out for collaborations, opportunities, or just to say Hello !</p>
+            <div class="contact-links">
+                {% if contact %}
+                <a href="mailto:{{ contact.email }}" class="contact-card">
+                    <i class="fas fa-envelope"></i>
+                    <span>Email</span>
+                    <small>{{ contact.email }}</small>
+                </a>
+                <a href="{{ contact.linkedin }}" class="contact-card" target="_blank">
+                    <i class="fab fa-linkedin"></i>
+                    <span>LinkedIn</span>
+                    <small>Connect with me</small>
+                </a>
+                <a href="{{ contact.github }}" class="contact-card" target="_blank">
+                    <i class="fab fa-github"></i>
+                    <span>GitHub</span>
+                    <small>Check out my code</small>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- YouTube Section -->
+<section id="youtube" class="section section-alt">
+    <div class="container">
+        <div class="youtube-container">
+            <h2 class="section-title" style="margin-bottom: 1rem;">Need Some Entertainment ?? 🎬</h2>
+            <p class="youtube-intro">When I am not coding, I create content ! <br> Hop into my YouTube channel where I share my Music ! 🎶🎵🎤</p>
+            <div class="youtube-cta">
+                <a href="https://www.youtube.com/@vibhavarikotekar" class="btn btn-youtube" target="_blank">
+                    <i class="fab fa-youtube"></i> Visit My YouTube Channel
+                </a>
+                <a href="https://www.instagram.com/vibhavari_k19/" class="btn btn-instagram" target="_blank">
+                    <i class="fab fa-instagram"></i> Follow Me on Instagram
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container">
+        <p>Built & Designed by Vibhavari Kotekar</p>
+        <p>&copy; All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+    // Typing animation
+    const textToType = "Hey, I am Vibhavari !";
+    const typewriterElement = document.getElementById('typewriter');
+    let charIndex = 0;
+    
+    function typeWriter() {
+        if (charIndex < textToType.length) {
+            typewriterElement.textContent += textToType.charAt(charIndex);
+            charIndex++;
+            setTimeout(typeWriter, 100); // Adjust speed here (milliseconds per character)
+        }
+    }
+    
+    // Start typing animation when page loads
+    window.addEventListener('load', () => {
+        setTimeout(typeWriter, 500); // Delay before starting (500ms)
+    });
+</script>
+{% endblock %}
+
